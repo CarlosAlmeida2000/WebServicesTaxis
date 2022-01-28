@@ -3,7 +3,7 @@ from fernet_fields import EncryptedTextField
 
 # Create your models here.
 class Roles(models.Model):
-    nombre = models.CharField(max_length = 16, unique = True)
+    nombre = models.CharField(max_length = 16)
 
 class Usuarios(models.Model):
     correo = models.EmailField(max_length = 75, unique = True)
@@ -21,4 +21,4 @@ class Personas(models.Model):
     cedula = models.CharField(max_length = 10)
     telefono = models.CharField(max_length = 10)
     foto_perfil = models.ImageField(upload_to = "Perfiles", null = True, blank = False)
-    usuario = models.ForeignKey(Usuarios, on_delete = models.PROTECT, related_name = "usuarios")
+    usuario = models.ForeignKey(Usuarios, on_delete = models.PROTECT)

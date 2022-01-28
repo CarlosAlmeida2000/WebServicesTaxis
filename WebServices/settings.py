@@ -38,13 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    'Cliente.apps.ClienteConfig',
-    'Cooperativa.apps.CooperativaConfig',
-    'Reporte.apps.ReporteConfig',
-    'Seguridad.apps.SeguridadConfig',
-    'Servicio.apps.ServicioConfig',
-    'Taxista.apps.TaxistaConfig',
-    'Usuario.apps.UsuarioConfig',
+    'Cliente',
+    'Cooperativa',
+    'Reporte',
+    'Seguridad',
+    'Servicio',
+    'Taxista',
+    'Usuario',
 ]
 
 MIDDLEWARE = [
