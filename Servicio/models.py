@@ -1,6 +1,5 @@
 from django.db import models
 from WebServicesTaxis.Cliente.models import Clientes
-
 from WebServicesTaxis.Taxista.models import Taxistas
 
 # Create your models here.

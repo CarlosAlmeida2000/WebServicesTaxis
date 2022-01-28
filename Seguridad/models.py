@@ -1,5 +1,4 @@
 from django.db import models
-
 from WebServicesTaxis.Usuario.models import Personas
 
 # Create your models here.

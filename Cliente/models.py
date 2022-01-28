@@ -1,5 +1,3 @@
-from decimal import Clamped
-from operator import mod
 from django.db import models
 from WebServicesTaxis.Usuario.models import Personas
 
