@@ -1,0 +1,37 @@
+[
+    {
+        "model": "Usuario.roles",
+        "pk": 1,
+        "fields": {
+            "nombre": "Administrador"
+        }
+    },
+    {
+        "model": "Usuario.roles",
+        "pk": 2,
+        "fields": {
+            "nombre": "Cooperativa"
+        }
+    },
+    {
+        "model": "Usuario.roles",
+        "pk": 3,
+        "fields": {
+            "nombre": "Cliente"
+        }
+    },
+    {
+        "model": "Usuario.roles",
+        "pk": 4,
+        "fields": {
+            "nombre": "Taxista formal"
+        }
+    },
+    {
+        "model": "Usuario.roles",
+        "pk": 5,
+        "fields": {
+            "nombre": "Taxista informal"
+        }
+    }
+]

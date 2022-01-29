@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'Servicio',
     'Taxista',
     'Usuario',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
