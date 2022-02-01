@@ -14,5 +14,5 @@ class Servicios(models.Model):
     rechazada = models.BooleanField(default = False)
     culminada_tx = models.BooleanField(default = False)
     valor_cobrado = models.DecimalField(max_digits = 6, decimal_places = 2, null = True, blank = True)
-    taxista = models.ForeignKey(Taxistas, on_delete = models.PROTECT, related_name = "taxistas")
-    cliente = models.ForeignKey(Clientes, on_delete = models.PROTECT, related_name = "clientes")
+    taxista = models.ForeignKey(Taxistas, on_delete = models.PROTECT, related_name = 'taxistas')
+    cliente = models.ForeignKey(Clientes, on_delete = models.PROTECT, related_name = 'clientes')

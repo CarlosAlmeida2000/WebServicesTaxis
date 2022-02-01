@@ -14,8 +14,8 @@ class Taxista(APIView):
         if request.method == 'GET':
             try:
                 taxistas = list(Taxistas.objects.all().values())
-                return Response({"taxistas": taxistas})
+                return Response({'taxista': taxistas})
             except Taxistas.DoesNotExist:
-                return Response({"mensaje": "No existe el taxista."})
+                return Response({'taxista': 'No existe el taxista.'})
             except Exception as e:
-                return Response({"mensaje": "Sucedió un error al obtener los datos, por favor intente nuevamente."})
+                return Response({'taxista': 'Sucedió un error al obtener los datos, por favor intente nuevamente.'})

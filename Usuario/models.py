@@ -12,13 +12,13 @@ class Usuarios(models.Model):
     conf_correo = models.BooleanField(default = True)
  
 class RolesUsuario(models.Model):
-    usuario = models.ForeignKey(Usuarios, on_delete = models.PROTECT, related_name = "usuarios")
-    rol = models.ForeignKey(Roles, on_delete = models.PROTECT, related_name = "roles")
+    usuario = models.ForeignKey(Usuarios, on_delete = models.PROTECT, related_name = 'usuarios')
+    rol = models.ForeignKey(Roles, on_delete = models.PROTECT, related_name = 'roles')
 
 class Personas(models.Model):
     nombres = models.CharField(max_length = 40)
     apellidos = models.CharField(max_length = 40)
     cedula = models.CharField(max_length = 10)
     telefono = models.CharField(max_length = 10)
-    foto_perfil = models.ImageField(upload_to = "Perfiles", null = True, blank = True)
+    foto_perfil = models.ImageField(upload_to = 'Perfiles', null = True, blank = True)
     usuario = models.OneToOneField(Usuarios, on_delete = models.PROTECT)

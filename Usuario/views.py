@@ -14,8 +14,8 @@ class Usuario(APIView):
         if request.method == 'GET':
             try:
                 usuarios = list(Usuarios.objects.all().values())
-                return Response({"usuarios": usuarios})
+                return Response({'usuario': usuarios})
             except Usuarios.DoesNotExist:
-                return Response({"mensaje": "No existe el usuario."})
+                return Response({'usuario': 'No existe el usuario.'})
             except Exception as e:
-                return Response({"mensaje": "Sucedió un error al obtener los datos, por favor intente nuevamente."})
+                return Response({'usuario': 'Sucedió un error al obtener los datos, por favor intente nuevamente.'})
