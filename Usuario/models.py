@@ -21,4 +21,4 @@ class Personas(models.Model):
     cedula = models.CharField(max_length = 10)
     telefono = models.CharField(max_length = 10)
     foto_perfil = models.ImageField(upload_to = "Perfiles", null = True, blank = True)
-    usuario = models.ForeignKey(Usuarios, on_delete = models.PROTECT)
+    usuario = models.OneToOneField(Usuarios, on_delete = models.PROTECT)

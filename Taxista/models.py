@@ -12,4 +12,4 @@ class Taxistas(models.Model):
     foto_licencia_f = models.ImageField(upload_to = "Taxistas")
     foto_licencia_t = models.ImageField(upload_to = "Taxistas")
     disponibilidad = models.CharField(max_length = 22)
-    persona = models.ForeignKey(Personas, on_delete = models.PROTECT)
+    persona = models.OneToOneField(Personas, on_delete = models.PROTECT)

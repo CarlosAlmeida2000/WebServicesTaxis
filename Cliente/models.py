@@ -3,7 +3,7 @@ from Usuario.models import Personas
 
 # Create your models here.
 class Clientes(models.Model):
-    persona = models.ForeignKey(Personas, on_delete = models.PROTECT)
+    persona = models.OneToOneField(Personas, on_delete = models.PROTECT)
 
 class LugaresFavoritos(models.Model):
     nombre_sitio = models.CharField(max_length = 60)

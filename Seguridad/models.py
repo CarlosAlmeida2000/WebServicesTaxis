@@ -14,5 +14,5 @@ class Emergencias(models.Model):
     fecha_hora_alerta = models.DateTimeField()
     ultima_fecha_hora = models.DateTimeField()
     persona = models.ForeignKey(Personas, on_delete = models.PROTECT, related_name = "emergencias")
-    servicio = models.ForeignKey(Servicios, on_delete = models.PROTECT, null = True, blank = True)
+    servicio = models.OneToOneField(Servicios, on_delete = models.PROTECT, null = True, blank = True)
 
