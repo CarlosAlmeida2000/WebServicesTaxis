@@ -6,10 +6,6 @@ import json
 # Create your views here.
 class Taxista(APIView):
 
-    # GET con parámetros 
-    # http://127.0.0.1:8000/taxista/?param=dato&param2=dato
-    # GET sin parámetros
-    # http://127.0.0.1:8000/taxista/
     def get(self, request, format = None):
         if request.method == 'GET':
             try:
