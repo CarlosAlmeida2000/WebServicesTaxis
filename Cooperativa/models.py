@@ -13,6 +13,27 @@ class Cooperativas(models.Model):
     ingresar_cobro = models.BooleanField(default = True)
     persona = models.OneToOneField(Personas, on_delete = models.PROTECT)
 
+    @staticmethod
+    def obtener_coop(request):
+        try:
+            if 'nom_cooperativa' in request.GET:
+                queryset_coop = Cooperativas.objects.filter(nom_cooperativa__icontains = request.GET['nom_cooperativa'])
+            else:
+                queryset_coop = Cooperativas.objects.all()
+            cooperativas = (queryset_coop.select_related('persona').select_related('usuario')
+            ).values('id', 'nom_cooperativa', 'telefono', 'direccion', 'ingresar_cobro', 
+            'persona_id', 'persona__nombres', 'persona__apellidos', 'persona__cedula', 'persona__telefono', 'persona__foto_perfil', 
+            'persona__usuario_id', 'persona__usuario__correo')
+            for c in cooperativas:
+                if(c['persona__foto_perfil'] != ''):
+                    encoded_string = 'data:image/PNG;base64,' + str(base64.b64encode(open(str('media/' + c['persona__foto_perfil']), 'rb').read()))[2:][:-1]
+                    c['persona__foto_perfil'] = encoded_string
+            return list(cooperativas)
+        except Cooperativas.DoesNotExist:
+            return 'No existe la cooperativa.'
+        except Exception as e:
+            return 'Sucedió un error al obtener los datos, por favor intente nuevamente.'
+
     def guardar_coop(self, json_data, usuario, persona):
         try:
             with transaction.atomic():
@@ -28,8 +49,8 @@ class Cooperativas(models.Model):
                 persona.apellidos = json_data['apellidos_gerente']
                 persona.cedula = json_data['cedula_gerente']
                 persona.telefono = json_data['telefono_gerente']
-                if 'foto_perfil' in json_data:
-                    ruta_img_borrar = ""
+                if 'foto_perfil' in json_data and str(json_data['foto_perfil']) != '':
+                    ruta_img_borrar = ''
                     if(str(persona.foto_perfil) != ''):
                         ruta_img_borrar = persona.foto_perfil.url
                     image_b64 = json_data['foto_perfil']
@@ -48,7 +69,6 @@ class Cooperativas(models.Model):
                 self.save()
                 return True
         except Exception as e: 
-            print("error ", str(e))
             return False
 
 class CoopeTaxis(models.Model):

@@ -1,0 +1,6 @@
+COOPERATIVA
+    GET con parámetros 
+    http://127.0.0.1:8000/cooperativa/?nom_cooperativa=San pedro
+
+    GET sin parámetros
+    http://127.0.0.1:8000/cooperativa/
