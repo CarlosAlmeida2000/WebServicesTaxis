@@ -3,5 +3,8 @@ COOPERATIVA
     http://127.0.0.1:8000/cooperativa/?nom_cooperativa=San pedro
     http://127.0.0.1:8000/cooperativa/?id=1
 
-    Para GET sin parámetros, POST, PUT, DELETE
+    Para GET sin parámetros, POST, PUT
     http://127.0.0.1:8000/cooperativa/
+
+    Para DELETE
+    http://127.0.0.1:8000/cooperativa/?id=1
