@@ -1,6 +1,6 @@
 from django.db import models
-from Cliente.models import Clientes
-from Taxista.models import Taxistas
+from Taxista import models as md_taxista
+from Cliente import models as md_cliente
 
 # Create your models here.
 class Servicios(models.Model):
@@ -14,5 +14,5 @@ class Servicios(models.Model):
     rechazada = models.BooleanField(default = False)
     culminada_tx = models.BooleanField(default = False)
     valor_cobrado = models.DecimalField(max_digits = 6, decimal_places = 2, null = True, blank = True)
-    taxista = models.ForeignKey(Taxistas, on_delete = models.PROTECT, related_name = 'taxistas')
-    cliente = models.ForeignKey(Clientes, on_delete = models.PROTECT, related_name = 'clientes')
+    taxista = models.ForeignKey('Taxista.Taxistas', on_delete = models.PROTECT, related_name = 'taxistas')
+    cliente = models.ForeignKey('Cliente.Clientes', on_delete = models.PROTECT, related_name = 'clientes')

@@ -1,19 +1,20 @@
-from itertools import count
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db import transaction
-from Taxista.models import *
-from Usuario.models import *
+from django.db.models import F
+from Usuario import models as md_usuario
+from Taxista import models as md_taxista
+from Usuario.File import File
 import json, base64, os
-from django.db.models import Count, Value, F, Func
 
+file = File()
 # Create your models here.
 class Cooperativas(models.Model):
     nom_cooperativa = models.CharField(max_length = 40)
     telefono = models.CharField(max_length = 10)
     direccion = models.TextField()
     ingresar_cobro = models.BooleanField(default = True)
-    persona = models.OneToOneField(Personas, on_delete = models.PROTECT)
+    persona = models.OneToOneField('Usuario.Personas', on_delete = models.PROTECT)
 
     @staticmethod
     def obtener_coop(request):
@@ -30,19 +31,20 @@ class Cooperativas(models.Model):
             'persona__usuario_id', 'persona__usuario__correo', 'persona__usuario__habilitado', 'eliminar')
             for c in cooperativas:
                 if(c['persona__foto_perfil'] != ''):
-                    encoded_string = 'data:image/PNG;base64,' + str(base64.b64encode(open(str('media/' + c['persona__foto_perfil']), 'rb').read()))[2:][:-1]
-                    c['persona__foto_perfil'] = encoded_string
+                    file.ruta = c['persona__foto_perfil']
+                    c['persona__foto_perfil'] = file.get_base64()
                 c['eliminar'] = False if len(CoopeTaxis.objects.filter(cooperativa_id = c['id'])) > 0 else True
             return list(cooperativas)
         except Cooperativas.DoesNotExist:
             return 'No existe la cooperativa.'
         except Exception as e:
-            return 'Sucedió un error al obtener los datos, por favor intente nuevamente.' +str(e)
+            return 'Sucedió un error al obtener los datos, por favor intente nuevamente.'
 
     def guardar_coop(self, json_data, usuario, persona):
         try:
             with transaction.atomic():
                 # atrapar la excepción de usuario repetido, unique
+                # tambien validar si la persona ya se encuentra registrada, se agrega el nuevo rol y demas datos
                 if 'persona__usuario__correo' in json_data:
                     usuario.correo = json_data['persona__usuario__correo']
                 if 'persona__usuario__clave' in json_data:
@@ -51,9 +53,9 @@ class Cooperativas(models.Model):
                     usuario.habilitado = json_data['persona__usuario__habilitado']
                 usuario.save()
                 if 'usuario__rol' in json_data:
-                    roles = RolesUsuario()
+                    roles = md_usuario.RolesUsuario()
                     roles.usuario = usuario
-                    roles.rol = (Roles.objects.get(nombre = json_data['usuario__rol']))
+                    roles.rol = (md_usuario.Roles.objects.get(nombre = json_data['usuario__rol']))
                     roles.save()
                 if 'persona__nombres' in json_data:
                     persona.nombres = json_data['persona__nombres']
@@ -67,11 +69,10 @@ class Cooperativas(models.Model):
                     ruta_img_borrar = ''
                     if(str(persona.foto_perfil) != ''):
                         ruta_img_borrar = persona.foto_perfil.url[1:]
-                    image_b64 = json_data['persona__foto_perfil']
-                    format, img_body = image_b64.split(';base64,')
-                    extension = format.split('/')[-1]
-                    img_file = ContentFile(base64.b64decode(img_body), name = 'usuario_' + str(usuario.id) + '.' + extension)
-                    persona.foto_perfil = img_file
+                    file = File()
+                    file.base64 = json_data['persona__foto_perfil']
+                    file.nombre_file = 'usuario_' + str(usuario.id)
+                    persona.foto_perfil = file.get_file()
                     if(ruta_img_borrar != ''):
                         os.remove(ruta_img_borrar)
                 persona.usuario = usuario
@@ -94,12 +95,12 @@ class Cooperativas(models.Model):
     def eliminar_coop(self):
         try:
             with transaction.atomic():
-                persona = Personas.objects.get(id = self.persona.id)
-                usuario = Usuarios.objects.get(id = persona.usuario.id)
-                roles = RolesUsuario.objects.filter(usuario_id = usuario.id).select_related('rol').values('id', 'rol_id', 'rol__nombre')
+                persona = md_usuario.Personas.objects.get(id = self.persona.id)
+                usuario = md_usuario.Usuarios.objects.get(id = persona.usuario.id)
+                roles = md_usuario.RolesUsuario.objects.filter(usuario_id = usuario.id).select_related('rol').values('id', 'rol_id', 'rol__nombre')
                 # Si tiene un único rol Cooperativa, se elimina por completo el usuario, persona y cooperativa
                 if (len(roles) == 1 and roles[0]['rol__nombre'] == 'Cooperativa'):
-                    rol_usuario = RolesUsuario.objects.get(id = roles[0]['id'])
+                    rol_usuario = md_usuario.RolesUsuario.objects.get(id = roles[0]['id'])
                     rol_usuario.delete()
                     self.delete()
                     if(str(persona.foto_perfil) != ''):
@@ -108,7 +109,7 @@ class Cooperativas(models.Model):
                     usuario.delete()
                 else:
                     # Se elimina sólo el rol de Cooperativa del usuario, porque tiene otros roles como: Cliente o Taxista o Administrador
-                    rol_usuario = RolesUsuario.objects.get(id = roles.get(rol__nombre = 'Cooperativa')['id'])
+                    rol_usuario = md_usuario.RolesUsuario.objects.get(id = roles.get(rol__nombre = 'Cooperativa')['id'])
                     rol_usuario.delete()
                     self.delete()
                 return True
@@ -116,5 +117,5 @@ class Cooperativas(models.Model):
             return False
 
 class CoopeTaxis(models.Model):
-    cooperativa = models.ForeignKey(Cooperativas, on_delete = models.PROTECT, related_name = 'cooperativas')
-    taxista = models.OneToOneField(Taxistas, on_delete = models.PROTECT, related_name = 'taxista')
+    cooperativa = models.ForeignKey('Cooperativa.Cooperativas', on_delete = models.PROTECT, related_name = 'cooperativas')
+    taxista = models.OneToOneField('Taxista.Taxistas', on_delete = models.PROTECT, related_name = 'taxista')
