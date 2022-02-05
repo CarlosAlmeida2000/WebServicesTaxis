@@ -142,7 +142,6 @@ class Taxistas(models.Model):
                 self.save()
                 return True
         except Exception as e: 
-            print(str(e))
             return False
 
     def eliminar_taxi(self):
@@ -158,6 +157,7 @@ class Taxistas(models.Model):
                     self.delete()
                     if(str(persona.foto_perfil) != ''):
                         os.remove(persona.foto_perfil.url[1:])
+                    self.eliminar_fotos_taxi()
                     persona.delete()
                     usuario.delete()
                 else:
@@ -165,6 +165,21 @@ class Taxistas(models.Model):
                     rol_usuario = md_usuario.RolesUsuario.objects.get(id = roles.get(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))['id'])
                     rol_usuario.delete()
                     self.delete()
+                    self.eliminar_fotos_taxi()
                 return True
         except Exception as e: 
             return False
+    
+    def eliminar_fotos_taxi(self):
+        try:
+            os.remove(self.foto_cedula_f.url[1:])
+            os.remove(self.foto_cedula_t.url[1:])
+            os.remove(self.foto_vehiculo.url[1:])
+            os.remove(self.foto_matricula_f.url[1:])
+            os.remove(self.foto_matricula_t.url[1:])
+            os.remove(self.foto_licencia_f.url[1:])
+            os.remove(self.foto_licencia_t.url[1:])
+            return True
+        except Exception as e: 
+            return False
+
