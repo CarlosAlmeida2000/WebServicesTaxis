@@ -8,3 +8,15 @@ COOPERATIVA
 
     Para DELETE
     http://127.0.0.1:8000/cooperativa/?id=1
+
+TAXISTA
+    GET con parámetros 
+    http://127.0.0.1:8000/taxista/?nom_taxista=carlos
+    http://127.0.0.1:8000/taxista/?id=1
+    http://127.0.0.1:8000/taxista/?id_cooperativa=5
+
+    Para GET sin parámetros, POST, PUT
+    http://127.0.0.1:8000/taxista/
+
+    Para DELETE
+    http://127.0.0.1:8000/taxista/?id=1

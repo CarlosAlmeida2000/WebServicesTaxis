@@ -24,11 +24,9 @@ class Cooperativa(APIView):
                 usuario = Usuarios()
                 persona = Personas()
                 cooperativa = Cooperativas()
-                if cooperativa.guardar_coop(json_data, usuario, persona):
-                    return Response({'cooperativa': True})
-                return Response({'cooperativa': False})
+                return Response({'cooperativa': cooperativa.guardar_coop(json_data, usuario, persona)})
             except Exception as e: 
-                return Response({'cooperativa': False})
+                return Response({'cooperativa': 'error'})
 
     def put(self, request, format = None):
         if request.method == 'PUT':
@@ -37,20 +35,16 @@ class Cooperativa(APIView):
                 cooperativa = Cooperativas.objects.get(id = json_data['id'])
                 persona = Personas.objects.get(id = cooperativa.persona.id)
                 usuario = Usuarios.objects.get(id = persona.usuario.id)
-                if cooperativa.guardar_coop(json_data, usuario, persona):
-                    return Response({'cooperativa': True})
-                return Response({'cooperativa': False})
+                return Response({'cooperativa': cooperativa.guardar_coop(json_data, usuario, persona)})
             except Exception as e: 
-                return Response({'cooperativa': False})
+                return Response({'cooperativa': 'error'})
 
-    def delete(self, request, format=None):
+    def delete(self, request, format = None):
         if request.method == 'DELETE':
             try:
                 cooperativa = Cooperativas.objects.get(id = request.GET['id'])
-                if cooperativa.eliminar_coop():
-                    return Response({'cooperativa': True})
-                return Response({'cooperativa': False})
+                return Response({'cooperativa': cooperativa.eliminar_coop()})
             except Exception as e: 
-                return Response({'cooperativa': False})
+                return Response({'cooperativa': 'error'})
 
   

@@ -15,7 +15,7 @@ class Taxista(APIView):
                 taxistas = Taxistas.obtener_taxis(request)
                 return Response({'taxista': taxistas})
             except Exception as e:
-                return Response({'taxista': 'Sucedió un error al obtener los datos, por favor intente nuevamente.'})
+                return Response({'taxista': 'error'})
     
     def post(self, request, format = None):
         if request.method == 'POST':
@@ -24,12 +24,9 @@ class Taxista(APIView):
                 usuario = Usuarios()
                 persona = Personas()
                 taxista = Taxistas()
-                if taxista.guardar_taxi(json_data, usuario, persona):
-                    return Response({'taxista': True})
-                return Response({'taxista': False})
+                return Response({'taxista': taxista.guardar_taxi(json_data, usuario, persona)})
             except Exception as e: 
-                print(str(e))
-                return Response({'taxista': False})
+                return Response({'taxista': 'error'})
 
     def put(self, request, format = None):
         if request.method == 'PUT':
@@ -38,18 +35,14 @@ class Taxista(APIView):
                 taxista = Taxistas.objects.get(id = json_data['id'])
                 persona = Personas.objects.get(id = taxista.persona.id)
                 usuario = Usuarios.objects.get(id = persona.usuario.id)
-                if taxista.guardar_taxi(json_data, usuario, persona):
-                    return Response({'taxista': True})
-                return Response({'taxista': False})
+                return Response({'taxista': taxista.guardar_taxi(json_data, usuario, persona)})
             except Exception as e: 
-                return Response({'taxista': False})
+                return Response({'taxista': 'error'})
 
-    def delete(self, request, format=None):
+    def delete(self, request, format = None):
         if request.method == 'DELETE':
             try:
                 taxista = Taxistas.objects.get(id = request.GET['id'])
-                if taxista.eliminar_taxi():
-                    return Response({'taxista': True})
-                return Response({'taxista': False})
+                return Response({'taxista': taxista.eliminar_taxi()})
             except Exception as e: 
-                return Response({'taxista': False})
+                return Response({'taxista': 'error'})
