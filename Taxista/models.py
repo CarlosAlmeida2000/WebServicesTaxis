@@ -89,7 +89,7 @@ class Taxistas(models.Model):
                     persona.telefono = json_data['persona__telefono']
                 persona.usuario = usuario
                 persona.save()
-                if 'usuario__rol' in json_data:
+                if len(md_usuario.RolesUsuario.objects.filter(usuario_id = u.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))) == 0:
                     roles = md_usuario.RolesUsuario()
                     roles.usuario = usuario
                     roles.rol = (md_usuario.Roles.objects.get(nombre = json_data['usuario__rol']))
