@@ -51,10 +51,10 @@ class Taxistas(models.Model):
                         file.ruta = t[campo]
                         t[campo] = file.get_base64()
                 rol_usuario = md_usuario.RolesUsuario.objects.filter(usuario_id = t['persona__usuario_id']).select_related('rol')
-                t['eliminar'] = False if(len(md_servicio.Servicios.objects.filter(taxista_id = t['id'])) > 0 or (len(rol_usuario.filter(rol__nombre = 'Taxista informal')) == 1 or len(md_cooperativa.CoopeTaxis.objects.filter(taxista_id = t['id'])) > 0)) else True
+                t['eliminar'] = False if len(md_servicio.Servicios.objects.filter(taxista_id = t['id'])) > 0 else True
             return list(taxistas)
         except Taxistas.DoesNotExist:
-            return 'No existe el taxista.'
+            return 'No existe el taxista'
         except Exception as e:
             return 'error'
 
@@ -70,12 +70,12 @@ class Taxistas(models.Model):
             usuario.save()
         except IntegrityError:
             # Verificar si ese usuario repetido es un taxista
-            u = md_usuario.Usuarios.objects.get(correo = usuario.correo)
-            roles = md_usuario.RolesUsuario.objects.filter(usuario_id = u.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))
+            copia_usuario = md_usuario.Usuarios.objects.get(correo = usuario.correo)
+            roles = md_usuario.RolesUsuario.objects.filter(usuario_id = copia_usuario.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))
             if len(roles) > 0:
                 return 'correo repetido'
             # El usuario repetido no es un taxista, sólo que tiene otro rol y se procede con el registro
-            usuario = u
+            usuario = copia_usuario
             persona = md_usuario.Personas.objects.get(usuario_id = usuario.id)
         try:
             with transaction.atomic():
@@ -89,7 +89,7 @@ class Taxistas(models.Model):
                     persona.telefono = json_data['persona__telefono']
                 persona.usuario = usuario
                 persona.save()
-                if len(md_usuario.RolesUsuario.objects.filter(usuario_id = u.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))) == 0:
+                if len(md_usuario.RolesUsuario.objects.filter(usuario_id = usuario.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))) == 0:
                     roles = md_usuario.RolesUsuario()
                     roles.usuario = usuario
                     roles.rol = (md_usuario.Roles.objects.get(nombre = json_data['usuario__rol']))
@@ -100,7 +100,6 @@ class Taxistas(models.Model):
                     self.numero_placa = json_data['numero_placa']
                 self.persona = persona
                 self.save()
-                
                 taxista = Taxistas.objects.filter(id = self.id).select_related('persona').values('foto_cedula_f', 'foto_cedula_t', 'foto_vehiculo', 'foto_matricula_f', 'foto_matricula_t', 'foto_licencia_f', 'foto_licencia_t', 'persona__foto_perfil')
                 for campo in ls_campos:
                     if campo in json_data:
@@ -127,6 +126,13 @@ class Taxistas(models.Model):
                             persona.foto_perfil = file.get_file()
                             persona.save()  
                 self.save()  
+                # Si el taxista es registrado por una cooperativa
+                if 'id_cooperativa' in json_data:
+                    cooperativa = md_cooperativa.Cooperativas.objects.get(pk = int(json_data['id_cooperativa']))
+                    coopTaxi = md_cooperativa.CoopeTaxis()
+                    coopTaxi.cooperativa = cooperativa
+                    coopTaxi.taxista = self
+                    coopTaxi.save()
                 for ruta_file in ls_img_borrar:
                    os.remove(ruta_file)
                 return 'guardado'

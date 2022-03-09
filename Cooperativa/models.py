@@ -39,7 +39,7 @@ class Cooperativas(models.Model):
                 c['eliminar'] = False if len(CoopeTaxis.objects.filter(cooperativa_id = c['id'])) > 0 else True
             return list(cooperativas)
         except Cooperativas.DoesNotExist:
-            return 'No existe la cooperativa.'
+            return 'No existe la cooperativa'
         except Exception as e:
             return 'error'
 
@@ -54,12 +54,12 @@ class Cooperativas(models.Model):
             usuario.save()
         except IntegrityError:
             # Verificar si ese usuario repetido es una cooperativa
-            u = md_usuario.Usuarios.objects.get(correo = usuario.correo)
-            roles = md_usuario.RolesUsuario.objects.filter(usuario_id = u.id).select_related('rol').filter(rol__nombre = 'Cooperativa')
+            copia_usuario = md_usuario.Usuarios.objects.get(correo = usuario.correo)
+            roles = md_usuario.RolesUsuario.objects.filter(usuario_id = copia_usuario.id).select_related('rol').filter(rol__nombre = 'Cooperativa')
             if len(roles) > 0:
                 return 'correo repetido'
             # El usuario repetido no es una cooperativa, sólo que tiene otro rol y se procede con el registro
-            usuario = u
+            usuario = copia_usuario
             persona = md_usuario.Personas.objects.get(usuario_id = usuario.id)
         try:
             with transaction.atomic():

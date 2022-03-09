@@ -1,0 +1,30 @@
+[
+    {
+        "model": "Usuario.usuarios",
+        "pk": 125,
+        "fields": {
+            "correo": "administrador@gmail.com",
+            "clave": "123456"
+        }
+    },
+    {
+        "model": "Usuario.rolesusuario",
+        "pk": 53,
+        "fields": {
+            "usuario_id": 125,
+            "rol_id": 1
+        }
+    },
+    {
+        "model": "Usuario.personas",
+        "pk": 42,
+        "fields": {
+            "nombres": "Administrador",
+            "apellidos": "Administrador",
+            "cedula": "0999999999",
+            "telefono": "0989898989",
+            "usuario_id": 125
+        }
+    }
+
+]

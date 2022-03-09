@@ -19,7 +19,8 @@ class File:
     
     def get_base64(self):
         try:
-            encoded_string = 'data:image/PNG;base64,' + str(base64.b64encode(open(str('media/' + self.ruta), 'rb').read()))[2:][:-1]
+            encoded_string = 'data:image/PNG;base64,' + str(base64.b64encode(open(str('media/' + str(self.ruta)), 'rb').read()))[2:][:-1]
             return encoded_string
         except Exception as e:
+            print(str(e))
             return None
