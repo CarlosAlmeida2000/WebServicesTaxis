@@ -1,12 +1,9 @@
-from django.core.files.base import ContentFile
-from django.db import IntegrityError
 from django.db import models
 from django.db import transaction
 from django.db.models import F
 from Usuario import models as md_usuario
-from Taxista import models as md_taxista
 from Usuario.File import File
-import json, base64, os
+import os
 
 file = File()
 # Create your models here.
@@ -43,62 +40,31 @@ class Cooperativas(models.Model):
         except Exception as e:
             return 'error'
 
-    def guardar_coop(self, json_data, usuario, persona):
+    def guardar_coop(self, json_data):
         try:
-            if 'persona__usuario__correo' in json_data:
-                usuario.correo = json_data['persona__usuario__correo']
-            if 'persona__usuario__clave' in json_data:
-                usuario.clave = json_data['persona__usuario__clave']
-            if 'persona__usuario__habilitado' in json_data:
-                usuario.habilitado = json_data['persona__usuario__habilitado']
-            usuario.save()
-        except IntegrityError:
-            # Verificar si ese usuario repetido es una cooperativa
-            copia_usuario = md_usuario.Usuarios.objects.get(correo = usuario.correo)
-            roles = md_usuario.RolesUsuario.objects.filter(usuario_id = copia_usuario.id).select_related('rol').filter(rol__nombre = 'Cooperativa')
-            if len(roles) > 0:
-                return 'correo repetido'
-            # El usuario repetido no es una cooperativa, sólo que tiene otro rol y se procede con el registro
-            usuario = copia_usuario
-            persona = md_usuario.Personas.objects.get(usuario_id = usuario.id)
-        try:
-            with transaction.atomic():
-                if 'persona__nombres' in json_data:
-                    persona.nombres = json_data['persona__nombres']
-                if 'persona__apellidos' in json_data:
-                    persona.apellidos = json_data['persona__apellidos']
-                if 'persona__cedula' in json_data:
-                    persona.cedula = json_data['persona__cedula']
-                if 'persona__telefono' in json_data:
-                    persona.telefono = json_data['persona__telefono']
-                if 'persona__foto_perfil' in json_data and json_data['persona__foto_perfil'] != '':
-                    ruta_img_borrar = ''
-                    if(str(persona.foto_perfil) != ''):
-                        ruta_img_borrar = persona.foto_perfil.url[1:]
-                    file = File()
-                    file.base64 = json_data['persona__foto_perfil']
-                    file.nombre_file = 'usuario_' + str(usuario.id)
-                    persona.foto_perfil = file.get_file()
-                    if(ruta_img_borrar != ''):
-                        os.remove(ruta_img_borrar)
-                persona.usuario = usuario
-                persona.save()
-                if len(md_usuario.RolesUsuario.objects.filter(usuario_id = usuario.id).select_related('rol').filter(rol__nombre = 'Cooperativa')) == 0:
-                    roles = md_usuario.RolesUsuario()
-                    roles.usuario = usuario
-                    roles.rol = (md_usuario.Roles.objects.get(nombre = 'Cooperativa'))
-                    roles.save()
-                if 'nom_cooperativa' in json_data:
-                    self.nom_cooperativa = json_data['nom_cooperativa']
-                if 'telefono' in json_data:
-                    self.telefono = json_data['telefono']
-                if 'direccion' in json_data:
-                    self.direccion = json_data['direccion']
-                if 'ingresar_cobro' in json_data:
-                    self.ingresar_cobro = json_data['ingresar_cobro']
-                self.persona = persona
-                self.save()   
-                return 'guardado'
+            respuesta, usuario = self.persona.usuario.guardar_usuario(json_data, 'Cooperativa')
+            if respuesta == 'correo repetido':
+                return respuesta
+            if respuesta == 'otro rol':
+                self.persona = md_usuario.Personas.objects.get(usuario_id = usuario.id)
+            self.persona.usuario = usuario
+            respuesta, persona = self.persona.guardar_persona(json_data)
+            if len(md_usuario.RolesUsuario.objects.filter(usuario_id = usuario.id).select_related('rol').filter(rol__nombre = 'Cooperativa')) == 0:    
+                roles = md_usuario.RolesUsuario()
+                roles.usuario = usuario
+                roles.rol = (md_usuario.Roles.objects.get(nombre = 'Cooperativa'))
+                roles.save()
+            if 'nom_cooperativa' in json_data:
+                self.nom_cooperativa = json_data['nom_cooperativa']
+            if 'telefono' in json_data:
+                self.telefono = json_data['telefono']
+            if 'direccion' in json_data:
+                self.direccion = json_data['direccion']
+            if 'ingresar_cobro' in json_data:
+                self.ingresar_cobro = json_data['ingresar_cobro']
+            self.persona = persona
+            self.save()   
+            return 'guardado'
         except Exception as e: 
             return 'error'
 

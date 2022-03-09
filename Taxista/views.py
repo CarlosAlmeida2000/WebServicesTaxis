@@ -1,10 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db import transaction
-from django.core.files.base import ContentFile
 from Usuario.models import *
 from .models import *
-import json, base64, os
+import json
 
 # Create your views here.
 class Taxista(APIView):
@@ -21,10 +19,12 @@ class Taxista(APIView):
         if request.method == 'POST':
             try:
                 json_data = json.loads(request.body.decode('utf-8'))
-                usuario = Usuarios()
-                persona = Personas()
                 taxista = Taxistas()
-                return Response({'taxista': taxista.guardar_taxi(json_data, usuario, persona)})
+                persona = Personas()
+                usuario = Usuarios()
+                persona.usuario = usuario
+                taxista.persona = persona
+                return Response({'taxista': taxista.guardar_taxi(json_data)})
             except Exception as e: 
                 return Response({'taxista': 'error'})
 
@@ -33,9 +33,7 @@ class Taxista(APIView):
             try:
                 json_data = json.loads(request.body.decode('utf-8'))
                 taxista = Taxistas.objects.get(id = json_data['id'])
-                persona = Personas.objects.get(id = taxista.persona.id)
-                usuario = Usuarios.objects.get(id = persona.usuario.id)
-                return Response({'taxista': taxista.guardar_taxi(json_data, usuario, persona)})
+                return Response({'taxista': taxista.guardar_taxi(json_data)})
             except Exception as e: 
                 return Response({'taxista': 'error'})
 

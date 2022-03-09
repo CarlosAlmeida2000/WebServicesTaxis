@@ -1,5 +1,3 @@
-from django.core.files.base import ContentFile
-from django.db import IntegrityError
 from django.db import models
 from django.db import transaction
 from django.db.models import F, Value, Q
@@ -8,7 +6,7 @@ from Usuario import models as md_usuario
 from Servicio import models as md_servicio
 from Cooperativa import models as md_cooperativa
 from Usuario.File import File
-import json, base64, os
+import os
 
 ls_campos = ['foto_cedula_f', 'foto_cedula_t', 'foto_vehiculo', 'foto_matricula_f', 'foto_matricula_t', 'foto_licencia_f', 'foto_licencia_t', 'persona__foto_perfil']
 file = File()
@@ -35,7 +33,7 @@ class Taxistas(models.Model):
             elif 'id' in request.GET: 
                 queryset_taxis = Taxistas.objects.filter(id = request.GET['id'])
             elif 'nom_taxista' in request.GET:
-                queryset_taxis = (Taxistas.objects.all()).annotate(nombres_completos = Concat('persona__nombres', Value(' '), 'persona__apellidos'))
+                queryset_taxis = (Taxistas.objects.all().select_related('persona')).annotate(nombres_completos = Concat('persona__nombres', Value(' '), 'persona__apellidos'))
                 queryset_taxis = queryset_taxis.filter(nombres_completos__icontains = request.GET['nom_taxista'])
             else:
                 queryset_taxis = Taxistas.objects.all()
@@ -58,84 +56,63 @@ class Taxistas(models.Model):
         except Exception as e:
             return 'error'
 
-    def guardar_taxi(self, json_data, usuario, persona):
+    def guardar_taxi(self, json_data):
         ls_img_borrar = list()
         try:
-            if 'persona__usuario__correo' in json_data:
-                usuario.correo = json_data['persona__usuario__correo']
-            if 'persona__usuario__clave' in json_data:
-                usuario.clave = json_data['persona__usuario__clave']
-            if 'persona__usuario__habilitado' in json_data:
-                usuario.habilitado = json_data['persona__usuario__habilitado']
-            usuario.save()
-        except IntegrityError:
-            # Verificar si ese usuario repetido es un taxista
-            copia_usuario = md_usuario.Usuarios.objects.get(correo = usuario.correo)
-            roles = md_usuario.RolesUsuario.objects.filter(usuario_id = copia_usuario.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))
-            if len(roles) > 0:
-                return 'correo repetido'
-            # El usuario repetido no es un taxista, sólo que tiene otro rol y se procede con el registro
-            usuario = copia_usuario
-            persona = md_usuario.Personas.objects.get(usuario_id = usuario.id)
-        try:
-            with transaction.atomic():
-                if 'persona__nombres' in json_data:
-                    persona.nombres = json_data['persona__nombres']
-                if 'persona__apellidos' in json_data:
-                    persona.apellidos = json_data['persona__apellidos']
-                if 'persona__cedula' in json_data:
-                    persona.cedula = json_data['persona__cedula']
-                if 'persona__telefono' in json_data:
-                    persona.telefono = json_data['persona__telefono']
-                persona.usuario = usuario
-                persona.save()
-                if len(md_usuario.RolesUsuario.objects.filter(usuario_id = usuario.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))) == 0:
-                    roles = md_usuario.RolesUsuario()
-                    roles.usuario = usuario
-                    roles.rol = (md_usuario.Roles.objects.get(nombre = json_data['usuario__rol']))
-                    roles.save()
-                if 'disponibilidad' in json_data:
-                    self.disponibilidad = json_data['disponibilidad']
-                if 'numero_placa' in json_data:
-                    self.numero_placa = json_data['numero_placa']
-                self.persona = persona
-                self.save()
-                taxista = Taxistas.objects.filter(id = self.id).select_related('persona').values('foto_cedula_f', 'foto_cedula_t', 'foto_vehiculo', 'foto_matricula_f', 'foto_matricula_t', 'foto_licencia_f', 'foto_licencia_t', 'persona__foto_perfil')
-                for campo in ls_campos:
-                    if campo in json_data:
-                        if(taxista[0][campo] != ''):
-                            ls_img_borrar.append('media/'+ taxista[0][campo])
-                        file.base64 = json_data[campo]
-                        file.nombre_file = campo + '_' + str(usuario.id)
-                        if 'foto_cedula_f' == campo:
-                            self.foto_cedula_f = file.get_file()
-                        if 'foto_cedula_t' == campo:
-                            self.foto_cedula_t = file.get_file()
-                        if 'foto_vehiculo' == campo:
-                            self.foto_vehiculo = file.get_file()
-                        if 'foto_matricula_f' == campo:
-                            self.foto_matricula_f = file.get_file()
-                        if 'foto_matricula_t' == campo:
-                            self.foto_matricula_t = file.get_file()
-                        if 'foto_licencia_f' == campo:
-                            self.foto_licencia_f = file.get_file()
-                        if 'foto_licencia_t' == campo:
-                            self.foto_licencia_t = file.get_file()
-                        if 'persona__foto_perfil' == campo:
-                            file.nombre_file = 'usuario_' + str(usuario.id)
-                            persona.foto_perfil = file.get_file()
-                            persona.save()  
-                self.save()  
-                # Si el taxista es registrado por una cooperativa
-                if 'id_cooperativa' in json_data:
-                    cooperativa = md_cooperativa.Cooperativas.objects.get(pk = int(json_data['id_cooperativa']))
-                    coopTaxi = md_cooperativa.CoopeTaxis()
-                    coopTaxi.cooperativa = cooperativa
-                    coopTaxi.taxista = self
-                    coopTaxi.save()
-                for ruta_file in ls_img_borrar:
-                   os.remove(ruta_file)
-                return 'guardado'
+            respuesta, usuario = self.persona.usuario.guardar_usuario(json_data, json_data['usuario__rol'])
+            if respuesta == 'correo repetido':
+                return respuesta
+            if respuesta == 'otro rol':
+                self.persona = md_usuario.Personas.objects.get(usuario_id = usuario.id)
+            self.persona.usuario = usuario
+            respuesta, persona = self.persona.guardar_persona(json_data)
+            if len(md_usuario.RolesUsuario.objects.filter(usuario_id = usuario.id).select_related('rol').filter(Q(rol__nombre = 'Taxista formal') | Q(rol__nombre = 'Taxista informal'))) == 0:
+                roles = md_usuario.RolesUsuario()
+                roles.usuario = usuario
+                roles.rol = (md_usuario.Roles.objects.get(nombre = json_data['usuario__rol']))
+                roles.save()
+            if 'disponibilidad' in json_data:
+                self.disponibilidad = json_data['disponibilidad']
+            if 'numero_placa' in json_data:
+                self.numero_placa = json_data['numero_placa']
+            self.persona = persona
+            self.save()
+            taxista = Taxistas.objects.filter(id = self.id).select_related('persona').values('foto_cedula_f', 'foto_cedula_t', 'foto_vehiculo', 'foto_matricula_f', 'foto_matricula_t', 'foto_licencia_f', 'foto_licencia_t', 'persona__foto_perfil')
+            for campo in ls_campos:
+                if campo in json_data:
+                    if(taxista[0][campo] != ''):
+                        ls_img_borrar.append('media/'+ taxista[0][campo])
+                    file.base64 = json_data[campo]
+                    file.nombre_file = campo + '_' + str(usuario.id)
+                    if 'foto_cedula_f' == campo:
+                        self.foto_cedula_f = file.get_file()
+                    if 'foto_cedula_t' == campo:
+                        self.foto_cedula_t = file.get_file()
+                    if 'foto_vehiculo' == campo:
+                        self.foto_vehiculo = file.get_file()
+                    if 'foto_matricula_f' == campo:
+                        self.foto_matricula_f = file.get_file()
+                    if 'foto_matricula_t' == campo:
+                        self.foto_matricula_t = file.get_file()
+                    if 'foto_licencia_f' == campo:
+                        self.foto_licencia_f = file.get_file()
+                    if 'foto_licencia_t' == campo:
+                        self.foto_licencia_t = file.get_file()
+                    if 'persona__foto_perfil' == campo:
+                        file.nombre_file = 'usuario_' + str(usuario.id)
+                        self.persona.foto_perfil = file.get_file()
+                        self.persona.save()  
+            self.save()  
+            # Si el taxista es registrado por una cooperativa
+            if 'id_cooperativa' in json_data:
+                cooperativa = md_cooperativa.Cooperativas.objects.get(pk = int(json_data['id_cooperativa']))
+                coopTaxi = md_cooperativa.CoopeTaxis()
+                coopTaxi.cooperativa = cooperativa
+                coopTaxi.taxista = self
+                coopTaxi.save()
+            for ruta_file in ls_img_borrar:
+                os.remove(ruta_file)
+            return 'guardado'
         except Exception as e: 
             return 'error' 
 

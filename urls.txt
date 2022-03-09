@@ -24,3 +24,12 @@ TAXISTA
 LOGIN
     Para GET y POST
     http://127.0.0.1:8000/usuario/
+
+
+CLIENTE
+    GET con parámetros 
+    http://127.0.0.1:8000/cliente/?nom_cliente=pedro
+    http://127.0.0.1:8000/cliente/?id=1
+
+    Para GET sin parámetros, POST, PUT
+    http://127.0.0.1:8000/cliente/
