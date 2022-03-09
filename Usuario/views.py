@@ -11,7 +11,7 @@ class Usuario(APIView):
     def get(self, request, format = None):
         if request.method == 'GET':
             try:
-                usuarios = list(Usuarios.objects.all().values('id', 'correo', 'habilitado', 'conf_correo', 'clave'))
+                usuarios = list(Usuarios.objects.all().values('id', 'correo', 'habilitado', 'conf_correo'))
                 return Response({'usuario': usuarios})
             except Usuarios.DoesNotExist:
                 return Response({'usuario': 'No existe el usuario.'})
